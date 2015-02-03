@@ -1,0 +1,25 @@
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+
+  margin: 0;
+}
+
+a {
+  color: #00B7FF;
+}
+
+.activity-iframe-container
+{
+  overflow: hidden;
+}
+
+iframe {
+  position:absolute;
+  left: 0px;
+  width: 100%;
+  top: 0px;
+  height: 100%;
+  border:none;
+
+}

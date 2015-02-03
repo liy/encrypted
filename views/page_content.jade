@@ -1,0 +1,26 @@
+// Basic markup for application display
+#full-screen-outer-container.radial-bg
+  iframe#activity-iframe
+// Modal Dialogs
+#dialog-error.modal(style='display:none;z-index:9998;')
+  .modal-dialog
+    .modal-header
+      h1 Error
+    #dialog-error-content.modal-body
+      p
+    .modal-footer
+#dialog-replay.modal(style='display:none;z-index:9998;')
+  .modal-dialog
+    .modal-header
+      h1 Activity complete
+    .modal-body
+      p What do you want to do now?
+    .modal-footer
+      a#button-finish.btn(href='#') Finish
+      a#button-replay.btn(href='#') Replay
+#dialog-activitycomplete.modal(style='display:none;z-index:9999;')
+  .modal-dialog
+    .modal-header
+      h1 Activity complete
+    .modal-footer
+      a#button-ok.btn(href='#') OK
