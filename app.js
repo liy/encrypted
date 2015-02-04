@@ -1,10 +1,9 @@
 var express=require("express");
-var parser = require('body-parser');
+var bodyParser = require('body-parser');
 var fs = require('fs');
 var crypto = require('crypto');
-var multer  = require('multer');
-var DecompressZip = require('decompress-zip');
-var methodOverride = require('method-override')
+var methodOverride = require('method-override');
+var mongoose = require('mongoose');
 
 var app = express();
 var port = process.env.PORT || 8081;
@@ -13,13 +12,12 @@ var root = 'D://private/offline/';
 var publicDir = root + '/public';
 var keyDir = root + '/keys';
 
-var uploadDone=false;
 
 app.use(express.static(__dirname + '/public'));
-app.use(parser.urlencoded({extended: true}));
-app.use(parser.json());
-// override method when pass a _method parameter using post
-app.use(methodOverride('_method'))
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json());
+app.use(bodyParser.json({ type: 'application/vnd.api+json' }));
+app.use(methodOverride());
 
 
 // allow cross origin resource sharing. You might want to change the origin to "*" to allow all origins, or restricted to a specific domain: "http://localhost"
@@ -30,6 +28,8 @@ app.use(function(req, res, next) {
 
   next();
 });
+
+mongoose.connect('mongodb://proximus.modulusmongo.net:27017/moGixy7h');
 
 // middleware handles the raw data.
 app.use(function(req, res, next){
@@ -44,73 +44,66 @@ app.use(function(req, res, next){
 });
 
 
+// rendering
+// app.set('view engine', 'jade');
 
 
 /*Run the server.*/
-app.listen(8080,function(){
-    console.log("Working on port 8080");
+app.listen(9999,function(){
+    console.log("Working on port 9999");
 });
 
 
-
-// rendering
-app.set('view engine', 'jade');
-
-
-
-////////////////////////////////////////////
-// route
-// test home
-app.get('/', function(req, res){
-  res.render('index', { pageTitle: "This is a dummy server" });
-});
-
-// For accessing the activity directly, only used by iframe
-app.get('/activities', function(req, res){
-  res.render('activities/index', { activities: activities });
-});
-
-////// 5 modes
-// algorithm
-app.get('/algorithm', function(req, res){
-  res.render('algorithm');
-});
-
-// Not on the spec, it is suppose to view the content of the playlist
-app.get('/playlists/:id', function(req, res){
-  res.render('playlists');
+var User = mongoose.model('User', {
+  name: String,
+  publicKeyPem: String,
+  passphrase: String
 });
 
 
-////////////////////////////////////////////
-// web services
-// recording
-app.get('/api/keys/:id', function(req, res){
-  var id = req.params.id;
-
-  fs.readFile(root+'/keys/'+id, function(err, data){
+app.get('/api/users', function(req, res){
+  User.find(function(err, users){
     if(err){
-      res.status(404).send('Not found');
+      res.send(err);
     }
-    else{
-      res.json(JSON.parse(data));
-    }
+
+    res.json(users);
   });
 });
 
-app.post('/api/keys', function(req, res){
-  var content = req.rawBody;
-  console.log(content);
+app.post('/api/users', function(req, res){
+  User.create({
+    name: req.body.name,
+    publicKeyPem: req.body.publicKeyPem
+  }, function(err, user){
+    if(err){
+      res.send(err);
+    }
 
-  var id = crypto.createHash('sha1').update(content + (new Date()).valueOf().toString()).digest('hex');
-
-
-  fs.writeFile(root + '/keys/' + id, content, function(err){
+    User.find(function(err, users){
       if(err){
-        res.status(500).send(err.toString());
+        res.end(err);
       }
-      else{
-        res.json(id);
-      }
+
+      res.json(users);
+    });
   });
+});
+
+app.get('/api/users/:id', function(req, res){
+  User.find({
+    _id: req.params.id
+  }, function(err, user){
+    if(err){
+      res.send(err);
+    }
+
+    res.json(user);
+  })
+});
+
+
+
+app.get('/', function(req, res){
+  res.sendfile('./public/index.html');
 });

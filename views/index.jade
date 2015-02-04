@@ -2,3 +2,6 @@ extends layout
 
 block content
   .div
+  form(action="/api/users", method="post", id='form')
+    input(type="text", name="name", id='name', value='Ant Killer')
+    input(type="submit", id='submit-button')

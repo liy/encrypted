@@ -1,7 +1,0 @@
-extends ../layout
-
-block content
-  form(action="/deploy/activities", method="post", enctype="multipart/form-data")
-    h2 Choose an activity zip package to deploy
-    input(type="file", name="activity")
-    input(type="submit")

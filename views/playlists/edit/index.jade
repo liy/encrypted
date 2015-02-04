@@ -1,7 +1,0 @@
-extends ../../layout
-
-block content
-  form(action='/playlists/#{playlistID}?_method=put', method='post')
-    for activity in activities
-      include edit
-    input(type='submit', value='Update playlist',data-transition='fade', data-theme='c')
