@@ -12,6 +12,7 @@ var root = 'D://private/offline/';
 var publicDir = root + '/public';
 var keyDir = root + '/keys';
 
+mongoose.connect('mongodb://liy:0000@proximus.modulusmongo.net:27017/moGixy7h');
 
 app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.urlencoded({extended: true}));
@@ -29,23 +30,23 @@ app.use(function(req, res, next) {
   next();
 });
 
-mongoose.connect('mongodb://proximus.modulusmongo.net:27017/moGixy7h');
 
 // middleware handles the raw data.
-app.use(function(req, res, next){
-  var data = '';
-  req.on('data', function(chunk){
-    data += chunk;
-  });
-  req.on('end', function(){
-    req.rawBody = data;
-    next();
-  });
-});
+// app.use(function(req, res, next){
+//   console.log('data received')
+//   var data = '';
+//   req.on('data', function(chunk){
+//     data += chunk;
+//   });
+//   req.on('end', function(){
+//     req.rawBody = data;
+//     next();
+//   });
+// });
 
 
 // rendering
-// app.set('view engine', 'jade');
+//app.set('view engine', 'jade');
 
 
 /*Run the server.*/
@@ -57,7 +58,8 @@ app.listen(9999,function(){
 var User = mongoose.model('User', {
   name: String,
   publicKeyPem: String,
-  passphrase: String
+  // user private key signed array of messages
+  data: String
 });
 
 
@@ -74,25 +76,48 @@ app.get('/api/users', function(req, res){
 app.post('/api/users', function(req, res){
   User.create({
     name: req.body.name,
-    publicKeyPem: req.body.publicKeyPem
+    publicKeyPem: req.body.publicKeyPem,
+    data: ''
   }, function(err, user){
     if(err){
+      console.log('error!!');
+      console.log(error);
       res.send(err);
     }
 
-    User.find(function(err, users){
-      if(err){
-        res.end(err);
-      }
-
-      res.json(users);
-    });
+    res.json(user);
   });
 });
 
 app.get('/api/users/:id', function(req, res){
   User.find({
     _id: req.params.id
+  }, function(err, results){
+    if(err){
+      res.send(err);
+    }
+
+    res.json(results[0]);
+  })
+});
+
+app.post('/api/clear', function(req, res){
+  mongoose.connection.db.dropCollection('users', function(err, result){
+    console.log(err);
+    if(err){
+      res.send(err);
+    }
+
+    res.send(result);
+  });
+});
+
+app.put('/api/users/:id/flush', function(req, res){
+  console.log('update message');
+  User.update({
+    _id: req.params.id
+  }, {
+    data: req.body.data
   }, function(err, user){
     if(err){
       res.send(err);
@@ -101,8 +126,6 @@ app.get('/api/users/:id', function(req, res){
     res.json(user);
   })
 });
-
-
 
 app.get('/', function(req, res){
   res.sendfile('./public/index.html');

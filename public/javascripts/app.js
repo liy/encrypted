@@ -19,6 +19,10 @@ messsageApp.config(['$routeProvider',
         templateUrl: 'views/users/show.html',
         controller: 'UserShowController'
       }).
+      when('/message', {
+        templateUrl: 'views/message.html',
+        controller: 'MessageController'
+      }).
       otherwise({
         redirectTo: '/users'
       });

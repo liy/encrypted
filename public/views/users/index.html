@@ -5,7 +5,10 @@
 
       <ul class="users">
         <li ng-repeat="user in users" class="thumbnail">
-          <a href="#/users/{{user.id}}">{{user.name}}</a>
+          <a href="#/users/{{user._id}}">{{user.name}}</a>
+          <p>
+            <span>{{user.publicKeyPem}}</span>
+          </p>
         </li>
       </ul>
 
