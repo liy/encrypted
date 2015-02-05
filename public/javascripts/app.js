@@ -24,6 +24,7 @@ messsageApp.config(['$routeProvider',
         controller: 'MessageController'
       }).
       otherwise({
-        redirectTo: '/users'
+        // TODO: send public message
+        redirectTo: '/message'
       });
   }]);

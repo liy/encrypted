@@ -4,7 +4,18 @@ var hasUser = false;
 // global
 var currentUserID;
 
-var usersController = angular.module('UsersController', []);
+var usersController = angular.module('UsersController', []).service('recipient', function(){
+  var recipient = null;
+  return {
+    getValue: function () {
+        return recipient;
+    },
+    setValue: function(value) {
+      console.log('recipient updated: ' + value);
+      recipient = value;
+    }
+  };
+});
 
 
 usersController.controller('UserNewController', ['$scope', '$http', '$routeParams', '$location',
@@ -23,21 +34,68 @@ usersController.controller('UserIndexController', ['$scope', '$http',
     });
   }]);
 
-usersController.controller('UserShowController', ['$scope', '$http', '$routeParams',
-  function($scope, $http, $routeParams) {
-    $http.get('/api/users/'+$routeParams.userId).success(function(data) {
-      console.log(data);
+usersController.controller('UserShowController', ['$scope', '$http', '$routeParams', 'recipient',
+  function($scope, $http, $routeParams, recipient) {
+    $http.get('/api/users/'+$routeParams.userId).success(function(response) {
       // TODO: decrypt the messages
-      $scope.user = data;
+      // console.log(response);
+      $scope.user = User.convertServerModel(response);
+      // console.log(User.verify($scope.user));
+
+      var decryptedMessages = [];
+
+      // has data
+      if(response.data){
+        var data = JSON.parse(response.data);
+        for(var i=0; i<data.messages.length; ++i){
+          var message = data.messages[i];
+          // decrypt encrypted message
+          if(message.encrypted){
+            try{
+              // use current user's private key to decrypt the message
+              var keyDecrypted = User.currentUser.privateKey.decrypt(forge.util.hexToBytes(message.key));
+              var ivDecrypted = User.currentUser.privateKey.decrypt(forge.util.hexToBytes(message.iv));
+            }
+            catch(err){
+              // swallow any message cannot decrypt
+              // console.warn('Not for you!', message)
+              continue;
+            }
+          }
+          else{
+            // just do a normal AES deciphering
+            var keyDecrypted = forge.util.hexToBytes(message.key);
+            var ivDecrypted = forge.util.hexToBytes(message.iv);
+          }
+
+          console.log(message)
+          var decipher = forge.cipher.createDecipher('AES-CBC', keyDecrypted);
+          decipher.start({iv: ivDecrypted});
+          decipher.update(forge.util.createBuffer(forge.util.hexToBytes(message.data)));
+          decipher.finish();
+          // outputs decrypted hex
+          console.log(decipher.output.data);
+          decryptedMessages.push(decipher.output.data);
+        }
+      }
+
+      $scope.messages = decryptedMessages;
     });
+
+    // private message
+    $scope.submit = function(content){
+      User.currentUser.commit(content, $scope.user.publicKey);
+      User.currentUser.push();
+    };
   }]);
 
 
 usersController.controller('MessageController', ['$scope', '$http', '$routeParams',
   function($scope, $http, $routeParams) {
 
-    $scope.flush = function(formData) {
-      User.currentUser.commit(formData.content);
+    $scope.flush = function(content) {
+      // create a public message
+      User.currentUser.commit(content);
       User.currentUser.push();
 
       console.log(User.currentUser);

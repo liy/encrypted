@@ -77,7 +77,7 @@ app.post('/api/users', function(req, res){
   User.create({
     name: req.body.name,
     publicKeyPem: req.body.publicKeyPem,
-    data: ''
+    data: Object.create(null)
   }, function(err, user){
     if(err){
       console.log('error!!');

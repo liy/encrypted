@@ -1,4 +1,22 @@
-<blockquote>
-  <p>{{user.publicKeyPem}}</p>
-  <footer><cite title="Source Title">{{user.name}}</cite>'s Public key</footer>
-</blockquote>
+
+<form class="form-horizontal" role="form">
+  <div class="form-group">
+    <label class="col-sm-2 control-label">To: {{user.name}}</label>
+  </div>
+  <div class="form-group">
+    <label for="inputMessage" class="col-sm-2 control-label">Private Message</label>
+    <div class="col-sm-4">
+      <textarea class="form-control" rows="3" ng-model="content"></textarea>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <button type="submit" class="btn btn-success" ng-click="submit(content)">Create</button>
+    </div>
+  </div>
+</form>
+
+<!-- show all messages -->
+<ul class="msg">
+  <li ng-repeat="message in messages">{{message}}</li>
+</ul>
