@@ -1,4 +1,5 @@
 var post = inclusive.post;
+var put = inclusive.put;
 
 var rsa = forge.pki.rsa;
 var pki = forge.pki;
@@ -106,10 +107,22 @@ var saveCurrentUser = function(user){
 var User = function(id, name, publicKey, privateKey, passphrase){
   this.name = name;
   this.passphrase = passphrase;
-  this.id = 0;
+  this.id = id;
   this.privateKey = privateKey;
   this.publicKey = publicKey;
-  this.data = null;
+
+  /*
+  data format:
+  {
+    messages: [{
+        dataHex: 'AES hex string',
+        key: 'RSA encrypted AES key',
+        iv: 'RSA encrypted AES iv'
+    }],
+    signature: ....
+  }
+   */
+  this.data = Object.create(null);
 };
 var p = User.prototype = Object.create(User.prototype);
 
@@ -118,18 +131,26 @@ User.create = function(name, passphrase){
   var privateKey = keypair.privateKey;
   var publicKey = keypair.publicKey;
 
-  return inclusive.post('/api/users', {
+  return post('/api/users', {
     name: name,
     publicKeyPem: pki.publicKeyToPem(publicKey)
   }).then(function(data){
-    var user = new User(data._id, name, publicKey, privateKey passphrase);
-
-    return user;
+    User.currentUser = new User(JSON.parse(data)._id, name, publicKey, privateKey, passphrase);
+    return User.currentUser.save();
   });
-}
+};
+
+User.init = function(){
+  var user = new User();
+  User.currentUser = user;
+  return user.load();
+};
 
 p.load = function(){
   var onload = function(value){
+    if(!value)
+      return null;
+
     this.id = value.id;
     this.privateKey = pki.decryptRsaPrivateKey(value.privateKeyPem, value.passphrase);
     this.publicKey = pki.publicKeyFromPem(value.publicKeyPem);
@@ -152,3 +173,50 @@ p.save = function(){
 
   return localforage.setItem('currentUser', data);
 };
+
+p.push = function(){
+  var data = {
+    id: this.id,
+    name: this.name,
+    publicKeyPem: pki.publicKeyToPem(this.publicKey),
+    data: this.data
+  }
+
+  return put('/api/users/'+this.id, data);
+};
+
+// TODO: change publicKeyPem to another user object
+p.commit = function(content, publicKeyPem){
+  // construct the encryption
+  // create cipher for message
+  var key = forge.random.getBytesSync(16);
+  var iv = forge.random.getBytesSync(16);
+  var cipher = forge.cipher.createCipher('AES-CBC', key);
+  cipher.start({iv: iv});
+  cipher.update(forge.util.createBuffer(content));
+  cipher.finish();
+  // do I need to turn it into hex? or just let JSON.stringify to encode bytes(probably won't work)?
+  var dataHex = cipher.output.toHex();
+
+  // encrypt key and iv,
+  var keyHex = forge.util.bytesToHex(this.publicKey.encrypt(key));
+  var ivHex = forge.util.bytesToHex(this.publicKey.encrypt(iv));
+  var message = {
+    data: dataHex,
+    key: keyHex,
+    iv: ivHex
+  };
+
+  // add the new message to the message array
+  this.data.messages = this.data.messages ? this.data.messages : [];
+  this.data.messages.push(message);
+
+  // sign the new message content, update the old signature
+  var md = forge.md.sha1.create();
+  md.update(JSON.stringify(this.data.messages), 'utf8');
+  this.data.signature = forge.util.bytesToHex(this.privateKey.sign(md));
+
+  this.save();
+};
+
+User.init();

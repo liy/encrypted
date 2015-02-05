@@ -112,17 +112,20 @@ app.post('/api/clear', function(req, res){
   });
 });
 
-app.put('/api/users/:id/flush', function(req, res){
+app.put('/api/users/:id', function(req, res){
   console.log('update message');
+  console.log(req.body.id);
+  console.log(req.body.data);
   User.update({
-    _id: req.params.id
+    _id: req.body.id
   }, {
-    data: req.body.data
+    data: JSON.stringify(req.body.data)
   }, function(err, user){
     if(err){
       res.send(err);
     }
 
+    console.log(user);
     res.json(user);
   })
 });

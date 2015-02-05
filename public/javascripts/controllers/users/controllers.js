@@ -11,31 +11,8 @@ usersController.controller('UserNewController', ['$scope', '$http', '$routeParam
   function($scope, $http, $routeParams, $location) {
 
     $scope.submit = function(user) {
-      generateKeyPair(user).then(function(value){
-        console.log('post', value);
-        $http.post('/api/users', {
-          name: value.name,
-          publicKeyPem: value.publicKeyPem
-        }).success(function(data, status, headers, config){
-
-          // localforage.setItem("userID", data._id);
-          // currentUserID = data._id;
-
-          var user = {
-            id: data._id,
-            privateKey: value.privateKeyPem,
-            publicKey: pki.publicKeyFromPem(value.publicKeyPem),
-            name: value.name,
-            passphrase: value.passphrase,
-            data: value.data
-          }
-
-          console.log('success!!!');
-        }).error(function(data, status, headers, config){
-          console.log('error!!!!');
-        })
-      });
-    };
+      User.create(user.name, user.passphrase);
+    }
 
   }]);
 
@@ -58,78 +35,25 @@ usersController.controller('UserShowController', ['$scope', '$http', '$routePara
 
 usersController.controller('MessageController', ['$scope', '$http', '$routeParams',
   function($scope, $http, $routeParams) {
-    setupCurrentUser();
-
-
-    /*
-    {
-      messages: [{
-          dataHex: 'AES hex string',
-          key: 'RSA encrypted AES key',
-          iv: 'RSA encrypted AES iv'
-      }],
-      signature: ....
-    }
-     */
 
     $scope.flush = function(formData) {
-      var content = "to sisi 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
+      User.currentUser.commit(formData.content);
+      User.currentUser.push();
 
-      // construct the encryption
-      // create cipher for message
-      var key = forge.random.getBytesSync(16);
-      var iv = forge.random.getBytesSync(16);
-      var cipher = forge.cipher.createCipher('AES-CBC', key);
-      cipher.start({iv: iv});
-      cipher.update(forge.util.createBuffer(content));
-      cipher.finish();
-      // do I need to turn it into hex? or just let JSON.stringify to encode bytes(probably won't work)?
-      var dataHex = cipher.output.toHex();
-
-      // encrypt key and iv,
-      var keyHex = forge.util.bytesToHex(currentUser.publicKey.encrypt(key));
-      var ivHex = forge.util.bytesToHex(currentUser.publicKey.encrypt(iv));
-      var message = {
-        data: dataHex,
-        key: keyHex,
-        iv: ivHex
-      };
-
-      // add the new message to the message array
-      var currentData = JSON.parse(currentUser.data);
-      currentData.messages.push(message);
-
-      // sign the new message content, update the old signature
-      var md = forge.md.sha1.create();
-      md.update(JSON.stringify(currentData.messages), 'utf8');
-      currentData.signature = forge.util.bytesToHex(currentUser.privateKey.sign(md));
-
-      saveCurrentUser();
-
-
-
-
-
-
-
-
-
-
+      console.log(User.currentUser);
 
 
       // Test decrypt
-      var keyDecrypted = currentUser.privateKey.decrypt(forge.util.hexToBytes(keyHex));
-      var ivDecrypted = currentUser.privateKey.decrypt(forge.util.hexToBytes(ivHex));
+      // var keyDecrypted = currentUser.privateKey.decrypt(forge.util.hexToBytes(keyHex));
+      // var ivDecrypted = currentUser.privateKey.decrypt(forge.util.hexToBytes(ivHex));
 
 
-      var decipher = forge.cipher.createDecipher('AES-CBC', keyDecrypted);
-      decipher.start({iv: ivDecrypted});
-      decipher.update(forge.util.createBuffer(forge.util.hexToBytes(dataHex)));
-      decipher.finish();
-      // outputs decrypted hex
-      console.log(decipher.output.data);
-
-
+      // var decipher = forge.cipher.createDecipher('AES-CBC', keyDecrypted);
+      // decipher.start({iv: ivDecrypted});
+      // decipher.update(forge.util.createBuffer(forge.util.hexToBytes(dataHex)));
+      // decipher.finish();
+      // // outputs decrypted hex
+      // console.log(decipher.output.data);
 
 
 
