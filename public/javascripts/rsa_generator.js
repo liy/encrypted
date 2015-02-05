@@ -15,7 +15,7 @@ var saveKeyPair = function(privateKey, publicKey, user)
     publicKeyPem: publicKeyPem,
     name: user.name,
     passphrase: user.passphrase,
-    data: ''
+    data: 'JSON string of the whole user signed message content'
   });
 };
 
@@ -91,4 +91,64 @@ var setupCurrentUser = function(){
       return currentUser;
     })
   });
+};
+
+var saveCurrentUser = function(user){
+  return localforage.setItem('currentUser', JSON.stringify(user));
+}
+
+
+
+
+
+
+
+var User = function(id, name, publicKey, privateKey, passphrase){
+  this.name = name;
+  this.passphrase = passphrase;
+  this.id = 0;
+  this.privateKey = privateKey;
+  this.publicKey = publicKey;
+  this.data = null;
+};
+var p = User.prototype = Object.create(User.prototype);
+
+User.create = function(name, passphrase){
+  var keypair = rsa.generateKeyPair({bits: 1024, e: 0x10001});
+  var privateKey = keypair.privateKey;
+  var publicKey = keypair.publicKey;
+
+  return inclusive.post('/api/users', {
+    name: name,
+    publicKeyPem: pki.publicKeyToPem(publicKey)
+  }).then(function(data){
+    var user = new User(data._id, name, publicKey, privateKey passphrase);
+
+    return user;
+  });
+}
+
+p.load = function(){
+  var onload = function(value){
+    this.id = value.id;
+    this.privateKey = pki.decryptRsaPrivateKey(value.privateKeyPem, value.passphrase);
+    this.publicKey = pki.publicKeyFromPem(value.publicKeyPem);
+    this.name = value.name;
+    this.passphrase = value.passphrase;
+    this.data = JSON.parse(value.data);
+  };
+  return localforage.getItem('currentUser').then(onload.bind(this));
+};
+
+p.save = function(){
+  var data = {
+    id: this.id,
+    privateKeyPem: pki.encryptRsaPrivateKey(this.privateKey, this.passphrase),
+    publicKeyPem: pki.publicKeyToPem(this.publicKey),
+    name: this.name,
+    passphrase: this.passphrase,
+    data: JSON.stringify(this.data)
+  };
+
+  return localforage.setItem('currentUser', data);
 };

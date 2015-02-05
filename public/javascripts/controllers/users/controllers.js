@@ -18,8 +18,17 @@ usersController.controller('UserNewController', ['$scope', '$http', '$routeParam
           publicKeyPem: value.publicKeyPem
         }).success(function(data, status, headers, config){
 
-          localforage.setItem("userID", data._id);
-          currentUserID = data._id;
+          // localforage.setItem("userID", data._id);
+          // currentUserID = data._id;
+
+          var user = {
+            id: data._id,
+            privateKey: value.privateKeyPem,
+            publicKey: pki.publicKeyFromPem(value.publicKeyPem),
+            name: value.name,
+            passphrase: value.passphrase,
+            data: value.data
+          }
 
           console.log('success!!!');
         }).error(function(data, status, headers, config){
@@ -51,42 +60,129 @@ usersController.controller('MessageController', ['$scope', '$http', '$routeParam
   function($scope, $http, $routeParams) {
     setupCurrentUser();
 
-    $scope.flush = function(data) {
-      var message = "to sisi";
 
-      // TODO: sign the message
-      var md = forge.md.sha1.create();
-      md.update(message, 'utf8');
-      var signature = forge.util.bytesToHex(currentUser.privateKey.sign(md));
+    /*
+    {
+      messages: [{
+          dataHex: 'AES hex string',
+          key: 'RSA encrypted AES key',
+          iv: 'RSA encrypted AES iv'
+      }],
+      signature: ....
+    }
+     */
 
+    $scope.flush = function(formData) {
+      var content = "to sisi 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
 
-      var toSend = {
-        message: message,
-        signature: signature
-      }
-
-      // TODO: use AES to cipher the JSON text
-      // TODO: use RSA to encrypt the AES key, send RSA encrypted key with the ciphered message
-
+      // construct the encryption
+      // create cipher for message
       var key = forge.random.getBytesSync(16);
       var iv = forge.random.getBytesSync(16);
       var cipher = forge.cipher.createCipher('AES-CBC', key);
       cipher.start({iv: iv});
-      cipher.update(forge.util.createBuffer(message));
+      cipher.update(forge.util.createBuffer(content));
       cipher.finish();
-      var encrypted = cipher.output;
-      // outputs encrypted hex
-      console.log(encrypted.toHex());
+      // do I need to turn it into hex? or just let JSON.stringify to encode bytes(probably won't work)?
+      var dataHex = cipher.output.toHex();
+
+      // encrypt key and iv,
+      var keyHex = forge.util.bytesToHex(currentUser.publicKey.encrypt(key));
+      var ivHex = forge.util.bytesToHex(currentUser.publicKey.encrypt(iv));
+      var message = {
+        data: dataHex,
+        key: keyHex,
+        iv: ivHex
+      };
+
+      // add the new message to the message array
+      var currentData = JSON.parse(currentUser.data);
+      currentData.messages.push(message);
+
+      // sign the new message content, update the old signature
+      var md = forge.md.sha1.create();
+      md.update(JSON.stringify(currentData.messages), 'utf8');
+      currentData.signature = forge.util.bytesToHex(currentUser.privateKey.sign(md));
+
+      saveCurrentUser();
 
 
 
 
-      var decipher = forge.cipher.createDecipher('AES-CBC', key);
-      decipher.start({iv: iv});
-      decipher.update(encrypted);
+
+
+
+
+
+
+
+
+      // Test decrypt
+      var keyDecrypted = currentUser.privateKey.decrypt(forge.util.hexToBytes(keyHex));
+      var ivDecrypted = currentUser.privateKey.decrypt(forge.util.hexToBytes(ivHex));
+
+
+      var decipher = forge.cipher.createDecipher('AES-CBC', keyDecrypted);
+      decipher.start({iv: ivDecrypted});
+      decipher.update(forge.util.createBuffer(forge.util.hexToBytes(dataHex)));
       decipher.finish();
       // outputs decrypted hex
       console.log(decipher.output.data);
+
+
+
+
+
+
+
+
+
+
+
+
+
+      // TODO: sign the message
+      // var md = forge.md.sha1.create();
+      // md.update(message, 'utf8');
+      // var signature = forge.util.bytesToHex(currentUser.privateKey.sign(md));
+
+      // // verify
+      // var md2 = forge.md.sha1.create();
+      // md2.update(message, 'utf8');
+      // var verified = currentUser.publicKey.verify(md2.digest().bytes(), forge.util.hexToBytes(signature));
+
+
+      // console.log(verified);
+
+
+
+      // var data = {
+      //   message: message,
+      //   signature: signature
+      // }
+
+      // TODO: use AES to cipher the JSON text
+      // TODO: use RSA to encrypt the AES key, send RSA encrypted key with the ciphered message
+
+      // var key = forge.random.getBytesSync(16);
+      // var iv = forge.random.getBytesSync(16);
+      // var cipher = forge.cipher.createCipher('AES-CBC', key);
+      // cipher.start({iv: iv});
+      // cipher.update(forge.util.createBuffer(message));
+      // cipher.finish();
+      // var encrypted = cipher.output;
+      // // outputs encrypted hex
+      // console.log(encrypted.toHex());
+
+
+
+
+      // var decipher = forge.cipher.createDecipher('AES-CBC', key);
+      // decipher.start({iv: iv});
+      // decipher.update(encrypted);
+      // decipher.finish();
+      // // outputs decrypted hex
+      // console.log(decipher.output.data);
 
 
 
@@ -121,7 +217,7 @@ usersController.controller('MessageController', ['$scope', '$http', '$routeParam
       // console.log(md);
       // console.log(forge.util.hexToBytes(message).toString());
       // console.log(currentUser);
-return;
+
       // $http.post('/api/users/' + currentuserID+ '/flush', {
       //   data: user.data
       // }).success(function(data, status, headers, config){
