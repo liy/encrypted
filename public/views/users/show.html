@@ -1,5 +1,8 @@
 <h1><span>{{user.name}}'s messages</span></h1>
 <br>
+<p>
+You can create a private message to <b>{{user.name}}</b>. This message will not be visible to you and anyone else other than <b>{{user.name}}</b>.
+</p>
 <div class="container">
 <form class="form-horizontal" role="form">
   <div class="form-group">
@@ -10,7 +13,7 @@
   </div>
   <div class="form-group">
     <div class="col-sm-offset-2 col-sm-10">
-      <button type="submit" class="btn btn-success" ng-click="submit(content)">Create for {{user.name}}</button>
+      <button type="submit" class="btn btn-success" ng-click="submit(content)">Create a private message to {{user.name}}</button>
     </div>
   </div>
 </form>

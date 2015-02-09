@@ -23,6 +23,7 @@ usersController.controller('UserNewController', ['$scope', '$http', '$routeParam
 
     $scope.submit = function(user) {
       User.create(user.name, user.passphrase);
+      $location.path('/users');
     }
 
   }]);
@@ -34,8 +35,8 @@ usersController.controller('UserIndexController', ['$scope', '$http',
     });
   }]);
 
-usersController.controller('UserShowController', ['$scope', '$http', '$routeParams', 'recipient',
-  function($scope, $http, $routeParams, recipient) {
+usersController.controller('UserShowController', ['$scope', '$http', '$routeParams', '$location', 'recipient',
+  function($scope, $http, $routeParams, $location, recipient) {
     $http.get('/api/users/'+$routeParams.userId).success(function(response) {
       // TODO: decrypt the messages
       // console.log(response);
@@ -86,7 +87,8 @@ usersController.controller('UserShowController', ['$scope', '$http', '$routePara
     $scope.submit = function(content){
       User.currentUser.commit(content, $scope.user.publicKey);
       User.currentUser.push().then(function(result){
-        window.alert('message created')
+        window.alert('message created');
+        $location.path('/users');
       });
     };
   }]);
