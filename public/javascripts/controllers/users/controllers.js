@@ -58,7 +58,7 @@ usersController.controller('UserShowController', ['$scope', '$http', '$routePara
             }
             catch(err){
               // swallow any message cannot decrypt
-              // console.warn('Not for you!', message)
+              console.warn('Not for you!', message);
               continue;
             }
           }
@@ -85,7 +85,9 @@ usersController.controller('UserShowController', ['$scope', '$http', '$routePara
     // private message
     $scope.submit = function(content){
       User.currentUser.commit(content, $scope.user.publicKey);
-      User.currentUser.push();
+      User.currentUser.push().then(function(result){
+        window.alert('message created')
+      });
     };
   }]);
 
