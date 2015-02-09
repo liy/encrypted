@@ -1,16 +1,12 @@
 var express=require("express");
 var bodyParser = require('body-parser');
 var fs = require('fs');
-var crypto = require('crypto');
 var methodOverride = require('method-override');
 var mongoose = require('mongoose');
 
 var app = express();
-var port = process.env.PORT || 8081;
+var port = process.env.PORT || 9999;
 
-var root = 'D://private/offline/';
-var publicDir = root + '/public';
-var keyDir = root + '/keys';
 
 mongoose.connect('mongodb://liy:0000@proximus.modulusmongo.net:27017/moGixy7h');
 
@@ -50,9 +46,10 @@ app.use(function(req, res, next) {
 
 
 /*Run the server.*/
-app.listen(9999,function(){
-    console.log("Working on port 9999");
+app.listen(port,function(){
+  console.log("Express server listening on port %d in %s mode", port, app.settings.env);
 });
+
 
 
 var User = mongoose.model('User', {
