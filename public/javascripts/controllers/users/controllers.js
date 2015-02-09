@@ -88,8 +88,8 @@ usersController.controller('UserShowController', ['$scope', '$http', '$routePara
       User.currentUser.commit(content, $scope.user.publicKey);
       User.currentUser.push().then(function(result){
         window.alert('message created');
-        $location.path('/users');
       });
+      $location.path('/users');
     };
   }]);
 
