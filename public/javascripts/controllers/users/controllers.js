@@ -94,13 +94,14 @@ usersController.controller('UserShowController', ['$scope', '$http', '$routePara
   }]);
 
 
-usersController.controller('MessageController', ['$scope', '$http', '$routeParams',
-  function($scope, $http, $routeParams) {
+usersController.controller('MessageController', ['$scope', '$http', '$routeParams', '$location',
+  function($scope, $http, $routeParams, $location) {
 
     $scope.flush = function(content) {
       // create a public message
       User.currentUser.commit(content);
       User.currentUser.push();
+      $location.path('/users');
 
       console.log(User.currentUser);
 
