@@ -71,6 +71,8 @@ app.get('/api/users', function(req, res){
 });
 
 app.post('/api/users', function(req, res){
+  console.dir(req.body);
+  console.log(req.body.name, req.body.publicKeyPem);
   User.create({
     name: req.body.name,
     publicKeyPem: req.body.publicKeyPem,
@@ -93,6 +95,8 @@ app.get('/api/users/:id', function(req, res){
     if(err){
       res.send(err);
     }
+
+    console.log(results[0]);
 
     res.json(results[0]);
   })

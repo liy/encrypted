@@ -62,7 +62,7 @@ p.push = function(){
     data: this.data
   }
 
-  return put('/api/users/'+this.id, data);
+  return put('/api/users/'+this.id, data, {'Content-Type': 'application/json'});
 };
 
 /**
@@ -121,7 +121,7 @@ User.create = function(name, passphrase){
   return post('/api/users', {
     name: name,
     publicKeyPem: pki.publicKeyToPem(publicKey)
-  }).then(function(data){
+  }, {'Content-Type': 'application/json'}).then(function(data){
     User.currentUser = new User(JSON.parse(data)._id, name, publicKey, privateKey, passphrase);
     return User.currentUser.save();
   });
