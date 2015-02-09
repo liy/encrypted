@@ -1,0 +1,7 @@
+{
+  "commitMessage": "Version %s",
+  "tagName": "v%s",
+  "scripts": {
+    "postcommit": "git push && git push --tags"
+  }
+}

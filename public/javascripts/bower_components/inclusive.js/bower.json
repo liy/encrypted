@@ -1,0 +1,23 @@
+{
+  "name": "inclusive.js",
+  "version": "0.3.4",
+  "authors": [
+    "Zhengyi Li"
+  ],
+  "description": "Inclusive javascript library",
+  "main": "dist/inclusive.js",
+  "moduleType": [
+    "amd"
+  ],
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "es6-promise": "~2.0.0"
+  }
+}

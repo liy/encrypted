@@ -1,0 +1,7 @@
+{
+  "name": "access test",
+  "private": true,
+  "dependencies": {
+    "inclusive.js": "git@bitbucket.org:inclusive/inclusive.js.git#~0.2.5"
+  }
+}

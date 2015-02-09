@@ -1,0 +1,11 @@
+{
+  "name": "dummy",
+  "version": "1.0.0",
+  "description": "Dummy REST API server",
+  "main": "main.js",
+  "author": "Zhengyi Li",
+  "dependencies": {
+    "body-parser": "^1.9.3",
+    "express": "^4.10.4"
+  }
+}

@@ -1,0 +1,2 @@
+# All the files in dist directory are treated as binary.
+dist/* binary
